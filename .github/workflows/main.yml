@@ -1,4 +1,4 @@
-name: Deploy Mirror
+name: MyMirror
 on: [push]
 permissions:
   contents: write
@@ -10,11 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install System Tools
-        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
-      - name: Execute Python Logic
-        run: python mirror.py
-      - name: Deploy to GitHub Pages
+
+      - name: Setup Folders and Index
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev
+          mkdir -p packages
+          mkdir -p dists/stable/main/binary-all
+          dpkg-scanpackages packages /dev/null > dists/stable/main/binary-all/Packages
+          gzip -9fk dists/stable/main/binary-all/Packages
+
+      - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
